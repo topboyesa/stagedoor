@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StageDoor — Event & Checkout Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E0E12;
+    --surface:#1A1A21;
+    --surface-2:#232329;
+    --paper:#F3EAD9;
+    --paper-shade:#DCCBA2;
+    --amber:#FFB627;
+    --amber-dark:#7A4E06;
+    --teal:#2FBFA1;
+    --teal-dark:#0B4A3E;
+    --white:#F7F5F2;
+    --muted:#9A98A3;
+    --line:#2E2E36;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--white);
+    font-family:'Work Sans',sans-serif;
+    line-height:1.5;
+    padding-bottom:80px;
+  }
+  h1,h2,h3{font-family:'Anton',sans-serif;font-weight:400;letter-spacing:0.5px;text-transform:uppercase;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---- Tab switcher ---- */
+  .switcher{
+    position:sticky;top:0;z-index:50;
+    display:flex;gap:0;
+    background:var(--ink);
+    border-bottom:1px solid var(--line);
+  }
+  .switcher button{
+    flex:1;
+    padding:16px;
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-family:'Work Sans',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+  }
+  .switcher button.active{color:var(--white);border-bottom-color:var(--amber);}
+
+  .screen{display:none;max-width:640px;margin:0 auto;}
+  .screen.active{display:block;}
+
+  /* ---- NAV ---- */
+  .nav{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:20px 24px;max-width:640px;margin:0 auto;
+  }
+  .logo{font-family:'Anton',sans-serif;font-size:20px;letter-spacing:1px;}
+  .logo span{color:var(--amber);}
+  .nav-cta{
+    font-size:13px;color:var(--muted);
+    border:1px solid var(--line);
+    padding:8px 16px;border-radius:2px;
+  }
+
+  /* ---- HERO ---- */
+  .hero{
+    margin:0 24px 32px;
+    background:linear-gradient(180deg, #26212f 0%, var(--surface) 60%);
+    border:1px solid var(--line);
+    padding:40px 28px 32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";position:absolute;top:-60px;right:-60px;
+    width:220px;height:220px;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,182,39,0.18) 0%, transparent 70%);
+  }
+  .eyebrow{
+    font-size:12px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--amber);margin-bottom:12px;font-weight:600;
+  }
+  .hero h1{font-size:42px;line-height:1.05;margin-bottom:18px;max-width:420px;}
+  .hero-meta{
+    display:flex;gap:24px;flex-wrap:wrap;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--white);
+    margin-bottom:24px;
+  }
+  .hero-meta div{display:flex;flex-direction:column;gap:4px;}
+  .hero-meta span.label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;}
+  .hero-cta{
+    display:inline-block;background:var(--amber);color:var(--amber-dark);
+    font-weight:600;padding:14px 28px;border-radius:2px;
+    font-size:14px;text-transform:uppercase;letter-spacing:1px;
+    border:none;cursor:pointer;
+  }
+
+  /* ---- TICKET TIERS ---- */
+  .section{padding:0 24px;margin-bottom:32px;}
+  .section h2{font-size:20px;margin-bottom:16px;}
+  .tier-row{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--surface);border:1px solid var(--line);
+    padding:18px 20px;margin-bottom:2px;
+    position:relative;
+  }
+  .tier-row::before,.tier-row::after{
+    content:"";position:absolute;top:50%;transform:translateY(-50%);
+    width:16px;height:16px;background:var(--ink);border-radius:50%;
+  }
+  .tier-row::before{left:-9px;}
+  .tier-row::after{right:-9px;}
+  .tier-info h3{font-family:'Work Sans',sans-serif;font-weight:600;font-size:15px;text-transform:none;letter-spacing:0;margin-bottom:4px;}
+  .tier-avail{font-size:12px;color:var(--teal);font-family:'IBM Plex Mono',monospace;}
+  .tier-avail.low{color:#E8834A;}
+  .tier-right{display:flex;align-items:center;gap:16px;}
+  .tier-price{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:500;}
+  .qty-select{
+    display:flex;align-items:center;border:1px solid var(--line);
+  }
+  .qty-select button{
+    background:none;border:none;color:var(--white);
+    width:28px;height:28px;font-size:16px;cursor:pointer;
+  }
+  .qty-select span{
+    width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;
+  }
+  .dashed-divider{
+    border-top:2px dashed var(--paper-shade);
+    opacity:0.25;margin:0;
+  }
+
+  /* ---- SUMMARY BAR ---- */
+  .summary-bar{
+    max-width:640px;margin:0 auto;
+    position:sticky;bottom:0;
+    background:var(--surface-2);border-top:1px solid var(--line);
+    padding:16px 24px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .summary-bar .total{font-family:'IBM Plex Mono',monospace;font-size:15px;}
+  .summary-bar .total span{color:var(--muted);font-size:12px;display:block;}
+  .btn-primary{
+    background:var(--amber);color:var(--amber-dark);
+    border:none;padding:14px 28px;font-weight:600;
+    font-size:14px;text-transform:uppercase;letter-spacing:1px;
+    border-radius:2px;cursor:pointer;
+  }
+
+  /* ---- CHECKOUT ---- */
+  .checkout-wrap{padding:32px 24px 0;}
+  .checkout-wrap h2{font-size:24px;margin-bottom:24px;}
+  .field-group{margin-bottom:16px;}
+  .field-group label{
+    display:block;font-size:12px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;
+  }
+  .field-group input{
+    width:100%;background:var(--surface);border:1px solid var(--line);
+    color:var(--white);padding:12px 14px;font-family:'Work Sans',sans-serif;font-size:14px;
+    border-radius:2px;
+  }
+  .field-row{display:flex;gap:12px;}
+  .field-row .field-group{flex:1;}
+
+  .pay-options{display:flex;gap:10px;margin-bottom:32px;}
+  .pay-option{
+    flex:1;border:1px solid var(--line);padding:12px;text-align:center;
+    font-size:13px;color:var(--muted);cursor:pointer;border-radius:2px;
+  }
+  .pay-option.selected{border-color:var(--amber);color:var(--white);background:rgba(255,182,39,0.06);}
+
+  /* ---- TICKET STUB (signature element) ---- */
+  .stub{
+    background:var(--paper);color:var(--ink);
+    display:flex;
+    margin:0 0 40px;
+    position:relative;
+  }
+  .stub-main{
+    flex:1;padding:28px;
+    border-right:2px dashed var(--paper-shade);
+    position:relative;
+  }
+  .stub-stub{
+    width:150px;padding:28px 20px;
+    display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  }
+  .stub::before,.stub::after{
+    content:"";position:absolute;top:-10px;
+    width:20px;height:20px;background:var(--ink);border-radius:50%;
+    z-index:2;
+  }
+  .stub::before{left:calc(100% - 150px - 10px);}
+  .stub::after{left:calc(100% - 150px - 10px);top:auto;bottom:-10px;}
+  .stub-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--amber-dark);font-weight:600;margin-bottom:6px;}
+  .stub-event{font-family:'Anton',sans-serif;font-size:24px;line-height:1.1;margin-bottom:16px;}
+  .stub-details{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5c5646;display:flex;flex-direction:column;gap:6px;margin-bottom:20px;}
+  .stub-line{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--paper-shade);}
+  .stub-line.total{font-weight:600;font-size:15px;border-bottom:none;padding-top:12px;}
+  .qr{
+    width:88px;height:88px;background:var(--ink);
+    background-image:
+      repeating-linear-gradient(90deg, var(--paper) 0 6px, transparent 6px 12px),
+      repeating-linear-gradient(0deg, var(--paper) 0 6px, transparent 6px 12px);
+    background-blend-mode:screen;
+  }
+  .stub-code{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#5c5646;}
+  .stub-rotated{
+    writing-mode:vertical-rl;text-orientation:mixed;
+    font-family:'Anton',sans-serif;font-size:12px;letter-spacing:3px;
+    text-transform:uppercase;color:var(--paper-shade);
+  }
+
+  @media (max-width:600px){
+    .hero h1{font-size:32px;}
+    .stub{flex-direction:column;}
+    .stub-main{border-right:none;border-bottom:2px dashed var(--paper-shade);}
+    .stub-stub{width:100%;flex-direction:row;}
+    .stub::before{left:-10px;top:calc(100% - 150px - 10px);}
+    .stub::after{left:auto;right:-10px;top:calc(100% - 150px - 10px);bottom:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <button class="active" onclick="showScreen('event', this)">Event page</button>
+  <button onclick="showScreen('checkout', this)">Checkout</button>
+</div>
+
+<!-- ================= EVENT PAGE ================= -->
+<div id="event" class="screen active">
+  <div class="nav">
+    <div class="logo">stage<span>door</span></div>
+    <div class="nav-cta">Log in</div>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">Live · Nairobi</div>
+    <h1>Neon Hours — The Wachira Sessions</h1>
+    <div class="hero-meta">
+      <div><span class="label">Date</span>Sat, 18 Oct 2026</div>
+      <div><span class="label">Doors</span>7:00 PM</div>
+      <div><span class="label">Venue</span>The Alchemist, Westlands</div>
+    </div>
+    <button class="hero-cta">See ticket options</button>
+  </div>
+
+  <div class="section">
+    <h2>Choose your ticket</h2>
+
+    <div class="tier-row">
+      <div class="tier-info">
+        <h3>General admission</h3>
+        <div class="tier-avail">240 left</div>
+      </div>
+      <div class="tier-right">
+        <div class="tier-price mono">KSh 1,500</div>
+        <div class="qty-select">
+          <button>−</button><span>0</span><button>+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-info">
+        <h3>VIP + lounge access</h3>
+        <div class="tier-avail low">18 left</div>
+      </div>
+      <div class="tier-right">
+        <div class="tier-price mono">KSh 4,000</div>
+        <div class="qty-select">
+          <button>−</button><span>0</span><button>+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-info">
+        <h3>Front row + meet & greet</h3>
+        <div class="tier-avail low">4 left</div>
+      </div>
+      <div class="tier-right">
+        <div class="tier-price mono">KSh 7,500</div>
+        <div class="qty-select">
+          <button>−</button><span>0</span><button>+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-bar">
+    <div class="total">Total<span>0 tickets selected</span></div>
+    <button class="btn-primary" onclick="showScreen('checkout', document.querySelectorAll('.switcher button')[1])">Continue</button>
+  </div>
+</div>
+
+<!-- ================= CHECKOUT ================= -->
+<div id="checkout" class="screen">
+  <div class="nav">
+    <div class="logo">stage<span>door</span></div>
+  </div>
+
+  <div class="checkout-wrap">
+    <h2>Checkout</h2>
+
+    <div class="field-group">
+      <label>Full name</label>
+      <input type="text" placeholder="Amara Njoroge">
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Email</label>
+        <input type="email" placeholder="amara@email.com">
+      </div>
+      <div class="field-group">
+        <label>Phone</label>
+        <input type="text" placeholder="07XX XXX XXX">
+      </div>
+    </div>
+
+    <label style="display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Payment method</label>
+    <div class="pay-options">
+      <div class="pay-option selected">M-Pesa</div>
+      <div class="pay-option">Card</div>
+      <div class="pay-option">Bank transfer</div>
+    </div>
+  </div>
+
+  <div style="padding:0 24px;">
+    <div class="stub">
+      <div class="stub-main">
+        <div class="stub-label">Order summary</div>
+        <div class="stub-event">Neon Hours — The Wachira Sessions</div>
+        <div class="stub-details">
+          <div>Sat, 18 Oct 2026 · Doors 7:00 PM</div>
+          <div>The Alchemist, Westlands</div>
+        </div>
+        <div class="stub-line"><span>2 × VIP + lounge access</span><span class="mono">KSh 8,000</span></div>
+        <div class="stub-line"><span>Service fee</span><span class="mono">KSh 300</span></div>
+        <div class="stub-line total"><span>Total</span><span class="mono">KSh 8,300</span></div>
+      </div>
+      <div class="stub-stub">
+        <div class="stub-rotated">Admit two</div>
+        <div class="qr"></div>
+        <div class="stub-code">#SD-8841-VX</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-bar">
+    <div class="total">Total<span class="mono">KSh 8,300</span></div>
+    <button class="btn-primary">Confirm & pay</button>
+  </div>
+</div>
+
+<script>
+function showScreen(id, btn){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.switcher button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

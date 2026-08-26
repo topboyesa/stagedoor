@@ -1,0 +1,38 @@
+Core user flows
+
+For creators/musicians (sellers):
+
+Sign up / log in
+Create an event (title, description, date, venue, image, ticket types + prices + quantity)
+View their event's sales (basic dashboard — even just a table)
+
+For fans (buyers):
+
+Browse/search events
+View event page (details, ticket options)
+Select ticket type + quantity → checkout
+Pay → receive a ticket (email + QR code or unique code)
+Suggested database tables (MySQL)
+users — id, name, email, password_hash, role (creator/buyer), created_at
+events — id, creator_id, title, description, date, venue, image_url, status
+ticket_types — id, event_id, name (e.g. "General", "VIP"), price, quantity_available, quantity_sold
+orders — id, buyer_id, event_id, total_amount, status, created_at
+order_items — id, order_id, ticket_type_id, quantity, unit_price
+tickets — id, order_item_id, unique_code, checked_in (boolean) — one row per actual ticket, for QR scanning at the door
+Page structure (plain PHP)
+/index.php              → browse events
+/event.php?id=123        → event details + ticket selection
+/checkout.php             → cart/checkout form
+/payment.php              → payment processing (Stripe/Flutterwave/Paystack depending on your market)
+/my-tickets.php            → buyer's purchased tickets
+/dashboard/               → creator area
+   /dashboard/create-event.php
+   /dashboard/my-events.php
+   /dashboard/sales.php
+/auth/
+   /auth/login.php
+   /auth/register.php
+A few decisions worth making early
+Payments: Stripe is easiest to integrate if your users are global; if you're targeting Kenya/East Africa specifically, Paystack or M-Pesa (Daraja API) might matter more to your users.
+Ticket validation: even a simple QR code + a checked_in flag you can look up on a phone browser is enough for v1 — you don't need a native scanner app yet.
+Multi-tenancy: since this is for creators plural, each creator only sees their own events — enforce that at the query level early so you don't retrofit permissions later.
