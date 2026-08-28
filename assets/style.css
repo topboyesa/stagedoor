@@ -1,0 +1,118 @@
+:root{
+  --ink:#0E0E12;
+  --surface:#1A1A21;
+  --surface-2:#232329;
+  --paper:#F3EAD9;
+  --paper-shade:#DCCBA2;
+  --amber:#FFB627;
+  --amber-dark:#7A4E06;
+  --teal:#2FBFA1;
+  --white:#F7F5F2;
+  --muted:#9A98A3;
+  --line:#2E2E36;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Work Sans',sans-serif;
+  line-height:1.5;
+  padding-bottom:80px;
+}
+h1,h2,h3{font-family:'Anton',sans-serif;font-weight:400;letter-spacing:0.5px;text-transform:uppercase;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+a{color:inherit;text-decoration:none;}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;max-width:640px;margin:0 auto;}
+.logo{font-family:'Anton',sans-serif;font-size:20px;letter-spacing:1px;}
+.logo span{color:var(--amber);}
+
+.page{max-width:640px;margin:0 auto;padding:0 24px;}
+
+/* ---- Event cards on index.php ---- */
+.event-card{
+  display:block;background:var(--surface);border:1px solid var(--line);
+  padding:20px;margin-bottom:12px;
+}
+.event-card .eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:8px;font-weight:600;}
+.event-card h2{font-size:22px;margin-bottom:8px;}
+.event-card .meta{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
+.event-card .price-from{margin-top:10px;font-size:13px;color:var(--teal);}
+
+/* ---- Hero on event.php ---- */
+.hero{
+  margin:24px 0 32px;background:linear-gradient(180deg, #26212f 0%, var(--surface) 60%);
+  border:1px solid var(--line);padding:40px 28px 32px;position:relative;overflow:hidden;
+}
+.eyebrow{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:12px;font-weight:600;}
+.hero h1{font-size:36px;line-height:1.1;margin-bottom:18px;}
+.hero-meta{display:flex;gap:24px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;margin-bottom:8px;}
+.hero-meta div{display:flex;flex-direction:column;gap:4px;}
+.hero-meta span.label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;}
+
+/* ---- Ticket tier rows ---- */
+.section{margin-bottom:32px;}
+.section h2{font-size:20px;margin-bottom:16px;}
+.tier-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);border:1px solid var(--line);padding:18px 20px;margin-bottom:2px;position:relative;
+}
+.tier-row::before,.tier-row::after{content:"";position:absolute;top:50%;transform:translateY(-50%);width:16px;height:16px;background:var(--ink);border-radius:50%;}
+.tier-row::before{left:-9px;}
+.tier-row::after{right:-9px;}
+.tier-info h3{font-family:'Work Sans',sans-serif;font-weight:600;font-size:15px;text-transform:none;letter-spacing:0;margin-bottom:4px;}
+.tier-avail{font-size:12px;color:var(--teal);font-family:'IBM Plex Mono',monospace;}
+.tier-avail.low{color:#E8834A;}
+.tier-avail.sold-out{color:#8a8880;}
+.tier-right{display:flex;align-items:center;gap:16px;}
+.tier-price{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:500;}
+.qty-select{display:flex;align-items:center;gap:8px;}
+.qty-select select,.qty-select input{
+  background:var(--ink);border:1px solid var(--line);color:var(--white);
+  padding:6px 10px;font-family:'IBM Plex Mono',monospace;font-size:13px;
+}
+
+/* ---- Forms ---- */
+.field-group{margin-bottom:16px;}
+.field-group label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.field-group input{
+  width:100%;background:var(--surface);border:1px solid var(--line);color:var(--white);
+  padding:12px 14px;font-family:'Work Sans',sans-serif;font-size:14px;border-radius:2px;
+}
+.field-row{display:flex;gap:12px;}
+.field-row .field-group{flex:1;}
+.error{color:#E8834A;font-size:13px;margin-bottom:16px;}
+
+/* ---- Buttons ---- */
+.btn-primary{
+  background:var(--amber);color:var(--amber-dark);border:none;padding:14px 28px;
+  font-weight:600;font-size:14px;text-transform:uppercase;letter-spacing:1px;
+  border-radius:2px;cursor:pointer;display:inline-block;
+}
+.summary-bar{
+  max-width:640px;margin:0 auto;position:sticky;bottom:0;background:var(--surface-2);
+  border-top:1px solid var(--line);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;
+}
+.summary-bar .total{font-family:'IBM Plex Mono',monospace;font-size:15px;}
+.summary-bar .total span{color:var(--muted);font-size:12px;display:block;}
+
+/* ---- Ticket stub ---- */
+.stub{background:var(--paper);color:var(--ink);display:flex;margin:24px 0 40px;position:relative;}
+.stub-main{flex:1;padding:28px;border-right:2px dashed var(--paper-shade);}
+.stub-stub{width:150px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;}
+.stub::before,.stub::after{content:"";position:absolute;top:-10px;width:20px;height:20px;background:var(--ink);border-radius:50%;z-index:2;}
+.stub::before{left:calc(100% - 150px - 10px);}
+.stub::after{left:calc(100% - 150px - 10px);top:auto;bottom:-10px;}
+.stub-label{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--amber-dark);font-weight:600;margin-bottom:6px;}
+.stub-event{font-family:'Anton',sans-serif;font-size:22px;line-height:1.1;margin-bottom:16px;}
+.stub-details{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5c5646;display:flex;flex-direction:column;gap:6px;margin-bottom:20px;}
+.stub-line{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--paper-shade);}
+.stub-line.total{font-weight:600;font-size:15px;border-bottom:none;padding-top:12px;}
+.stub-code{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#5c5646;}
+
+@media (max-width:600px){
+  .hero h1{font-size:28px;}
+  .stub{flex-direction:column;}
+  .stub-main{border-right:none;border-bottom:2px dashed var(--paper-shade);}
+  .stub-stub{width:100%;flex-direction:row;}
+}

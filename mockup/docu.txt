@@ -1,0 +1,8 @@
+Open it in a browser and use the tabs at the top to flip between the event page and checkout.
+
+A few design choices worth knowing about, since you'll be rebuilding this in PHP:
+
+Ticket stub motif: the perforated dashed line + circular notches on the tier rows and the checkout summary are the same visual idea repeated — the "ticket" is torn, not just a card. Easy to reuse as a CSS class across your PHP templates.
+Mono font for anything transactional (prices, dates, codes) vs. the display font for the event title only — keeps it feeling like ticket-printer output rather than a generic e-commerce page.
+Sticky bottom bar on both screens keeps the CTA visible without users scrolling back up — worth keeping even in your plain PHP version since it's just CSS position: sticky.
+Set the currency to KSh as a placeholder for Nairobi — swap that for whatever markets you're targeting.
