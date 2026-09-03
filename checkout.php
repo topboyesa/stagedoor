@@ -2,6 +2,7 @@
 session_start();
 require __DIR__ . '/config/database.php';
 require __DIR__ . '/includes/functions.php';
+require __DIR__ . '/includes/mailer.php';
 
 if (empty($_SESSION['cart']['items'])) {
     header('Location: index.php');
@@ -96,6 +97,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $pdo->commit();
+
+            // Fetch the generated ticket codes so the email can list them.
+            $ticket_stmt = $pdo->prepare("
+                SELECT t.unique_code, tt.name AS tier_name
+                FROM tickets t
+                JOIN order_items oi ON oi.id = t.order_item_id
+                JOIN ticket_types tt ON tt.id = oi.ticket_type_id
+                WHERE oi.order_id = ?
+                ORDER BY t.id ASC
+            ");
+            $ticket_stmt->execute([$order_id]);
+            $issued_tickets = $ticket_stmt->fetchAll();
+
+            send_ticket_confirmation([
+                'buyer_email'          => $email,
+                'buyer_name'           => $name,
+                'event_title'          => $event['title'],
+                'event_date_formatted' => format_event_date($event['event_date']) . ' · Doors ' . format_event_time($event['event_date']),
+                'venue'                => $event['venue'],
+                'total_formatted'      => format_currency($grand_total),
+            ], $line_items, $issued_tickets);
+            // Note: send_ticket_confirmation() never throws — if it fails,
+            // the order is still saved and the buyer still sees their
+            // tickets on confirmation.php, they just won't have the email.
+
             unset($_SESSION['cart']);
             header('Location: confirmation.php?order_id=' . $order_id);
             exit;

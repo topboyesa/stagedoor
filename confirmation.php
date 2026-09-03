@@ -43,7 +43,7 @@ require __DIR__ . '/includes/header.php';
     </div>
 
     <p style="color:var(--muted);margin-bottom:24px;">
-        Tickets sent to <?= e($order['buyer_email']) ?>. Each ticket below is a separate scannable code — screenshot them or forward this page.
+        A confirmation with these ticket codes was sent to <?= e($order['buyer_email']) ?>. You can also screenshot or bookmark this page.
     </p>
 
     <?php foreach ($tickets as $ticket): ?>
