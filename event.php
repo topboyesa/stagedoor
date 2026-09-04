@@ -2,8 +2,14 @@
 session_start();
 require __DIR__ . '/config/database.php';
 require __DIR__ . '/includes/functions.php';
+require __DIR__ . '/includes/cleanup.php';
 
 $event_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+
+// Opportunistic cleanup: release stock from any abandoned checkouts before
+// showing "X left" numbers, so buyers see accurate availability without
+// needing a scheduled job running in the background.
+expire_abandoned_orders($pdo);
 
 $stmt = $pdo->prepare("SELECT * FROM events WHERE id = ? AND status = 'published'");
 $stmt->execute([$event_id]);

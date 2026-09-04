@@ -3,11 +3,14 @@ session_start();
 require __DIR__ . '/config/database.php';
 require __DIR__ . '/includes/functions.php';
 require __DIR__ . '/includes/mpesa.php';
+require __DIR__ . '/includes/cleanup.php';
 
 if (empty($_SESSION['cart']['items'])) {
     header('Location: index.php');
     exit;
 }
+
+expire_abandoned_orders($pdo);
 
 $event_id = (int) $_SESSION['cart']['event_id'];
 $cart_items = $_SESSION['cart']['items']; // [ticket_type_id => qty]
@@ -59,10 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Order starts 'pending' — it only becomes 'paid' once Safaricom's
             // callback confirms the payment actually went through.
             $stmt = $pdo->prepare(
-                "INSERT INTO orders (event_id, buyer_name, buyer_email, buyer_phone, total_amount, status)
-                 VALUES (?, ?, ?, ?, ?, 'pending')"
+                "INSERT INTO orders (event_id, buyer_name, buyer_email, buyer_phone, total_amount, platform_fee, status)
+                 VALUES (?, ?, ?, ?, ?, ?, 'pending')"
             );
-            $stmt->execute([$event_id, $name, $email, $phone, $grand_total]);
+            $stmt->execute([$event_id, $name, $email, $phone, $grand_total, $service_fee]);
             $order_id = $pdo->lastInsertId();
 
             // Stock is reserved now (not when payment confirms) so two buyers

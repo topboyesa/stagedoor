@@ -48,7 +48,8 @@ CREATE TABLE orders (
     buyer_email             VARCHAR(150) NOT NULL,
     buyer_phone             VARCHAR(30),
     total_amount            DECIMAL(10,2) NOT NULL,
-    status                  ENUM('pending', 'paid', 'failed', 'cancelled') NOT NULL DEFAULT 'pending',
+    platform_fee            DECIMAL(10,2) NOT NULL DEFAULT 0,
+    status                  ENUM('pending', 'paid', 'failed', 'expired', 'cancelled') NOT NULL DEFAULT 'pending',
     mpesa_checkout_request_id VARCHAR(60),
     created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (event_id) REFERENCES events(id),
@@ -75,6 +76,24 @@ CREATE TABLE tickets (
     checked_in      BOOLEAN NOT NULL DEFAULT FALSE,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_item_id) REFERENCES order_items(id) ON DELETE CASCADE
+);
+
+-- Records money actually sent to a creator, per event. What a creator is OWED
+-- is calculated on the fly (paid orders' total_amount - platform_fee, per event);
+-- what they've been PAID is the sum of rows here. The difference is what's
+-- still outstanding. Only the platform admin creates rows here — creators
+-- can view but never write to this table.
+CREATE TABLE payouts (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    creator_id      INT NOT NULL,
+    event_id        INT NOT NULL,
+    amount          DECIMAL(10,2) NOT NULL,
+    notes           VARCHAR(255),
+    paid_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (creator_id) REFERENCES users(id),
+    FOREIGN KEY (event_id) REFERENCES events(id),
+    INDEX idx_creator (creator_id),
+    INDEX idx_event (event_id)
 );
 
 -- Seed data so index.php / event.php have something to show immediately.

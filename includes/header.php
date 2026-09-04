@@ -6,10 +6,11 @@
 <title><?= isset($page_title) ? e($page_title) . ' — StageDoor' : 'StageDoor' ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="<?= $base ?? '' ?>assets/style.css">
 </head>
 <body>
 
 <div class="nav">
-    <a href="index.php" class="logo">stage<span>door</span></a>
+    <a href="<?= $base ?? '' ?>index.php" class="logo">stage<span>door</span></a>
+    <a href="<?= $base ?? '' ?>creator/dashboard.php" style="font-size:13px;color:var(--muted);">For creators</a>
 </div>

@@ -22,7 +22,13 @@ function mpesa_get_access_token() {
     }
 
     $data = json_decode($response, true);
-    return $data['access_token'] ?? null;
+
+    if (!isset($data['access_token'])) {
+        error_log('M-Pesa auth failed — response: ' . $response);
+        return null;
+    }
+
+    return $data['access_token'];
 }
 
 // Step 2: trigger the STK Push — this is what makes the payment prompt
