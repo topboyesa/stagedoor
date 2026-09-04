@@ -42,16 +42,18 @@ CREATE TABLE ticket_types (
 );
 
 CREATE TABLE orders (
-    id              INT AUTO_INCREMENT PRIMARY KEY,
-    event_id        INT NOT NULL,
-    buyer_name      VARCHAR(150) NOT NULL,
-    buyer_email     VARCHAR(150) NOT NULL,
-    buyer_phone     VARCHAR(30),
-    total_amount    DECIMAL(10,2) NOT NULL,
-    status          ENUM('pending', 'paid', 'cancelled') NOT NULL DEFAULT 'pending',
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id                      INT AUTO_INCREMENT PRIMARY KEY,
+    event_id                INT NOT NULL,
+    buyer_name              VARCHAR(150) NOT NULL,
+    buyer_email             VARCHAR(150) NOT NULL,
+    buyer_phone             VARCHAR(30),
+    total_amount            DECIMAL(10,2) NOT NULL,
+    status                  ENUM('pending', 'paid', 'failed', 'cancelled') NOT NULL DEFAULT 'pending',
+    mpesa_checkout_request_id VARCHAR(60),
+    created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (event_id) REFERENCES events(id),
-    INDEX idx_buyer_email (buyer_email)
+    INDEX idx_buyer_email (buyer_email),
+    INDEX idx_checkout_request (mpesa_checkout_request_id)
 );
 
 CREATE TABLE order_items (

@@ -2,7 +2,7 @@
 session_start();
 require __DIR__ . '/config/database.php';
 require __DIR__ . '/includes/functions.php';
-require __DIR__ . '/includes/mailer.php';
+require __DIR__ . '/includes/mpesa.php';
 
 if (empty($_SESSION['cart']['items'])) {
     header('Location: index.php');
@@ -38,7 +38,7 @@ foreach ($cart_items as $tier_id => $qty) {
         'subtotal' => $subtotal,
     ];
 }
-$service_fee = round($total * 0.02); // flat 2% placeholder — adjust to your actual fee model
+$service_fee = round($total * 0.02); // flat 2% placeholder — this is your platform's cut, adjust as needed
 $grand_total = $total + $service_fee;
 
 $errors = [];
@@ -50,22 +50,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($name === '') $errors[] = 'Enter your full name.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Enter a valid email.';
-    if ($phone === '') $errors[] = 'Enter a phone number.';
+    if (!preg_match('/^(0|\+254|254)7\d{8}$/', $phone)) $errors[] = 'Enter a valid M-Pesa phone number (e.g. 07XX XXX XXX).';
 
     if (empty($errors)) {
         try {
             $pdo->beginTransaction();
 
-            // Lock the ticket_type rows so two simultaneous checkouts
-            // can't both oversell the last few tickets.
-            $order_id = null;
+            // Order starts 'pending' — it only becomes 'paid' once Safaricom's
+            // callback confirms the payment actually went through.
             $stmt = $pdo->prepare(
                 "INSERT INTO orders (event_id, buyer_name, buyer_email, buyer_phone, total_amount, status)
-                 VALUES (?, ?, ?, ?, ?, 'paid')" // 'paid' is a placeholder until real payment integration lands
+                 VALUES (?, ?, ?, ?, ?, 'pending')"
             );
             $stmt->execute([$event_id, $name, $email, $phone, $grand_total]);
             $order_id = $pdo->lastInsertId();
 
+            // Stock is reserved now (not when payment confirms) so two buyers
+            // can't both grab the last ticket while one is still entering their PIN.
+            // Trade-off: if this buyer abandons or fails to pay, that stock stays
+            // reserved until you build a cleanup job for expired pending orders.
             foreach ($line_items as $item) {
                 $tier_id = $item['tier']['id'];
 
@@ -85,49 +88,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "INSERT INTO order_items (order_id, ticket_type_id, quantity, unit_price) VALUES (?, ?, ?, ?)"
                 );
                 $item_stmt->execute([$order_id, $tier_id, $item['qty'], $item['tier']['price']]);
-                $order_item_id = $pdo->lastInsertId();
-
-                // One row per physical ticket so each gets its own scannable code.
-                $ticket_stmt = $pdo->prepare(
-                    "INSERT INTO tickets (order_item_id, unique_code) VALUES (?, ?)"
-                );
-                for ($i = 0; $i < $item['qty']; $i++) {
-                    $ticket_stmt->execute([$order_item_id, generate_ticket_code()]);
-                }
+                // Note: no ticket codes generated here — issue_tickets_for_order()
+                // only runs from mpesa-callback.php once payment is confirmed.
             }
 
             $pdo->commit();
 
-            // Fetch the generated ticket codes so the email can list them.
-            $ticket_stmt = $pdo->prepare("
-                SELECT t.unique_code, tt.name AS tier_name
-                FROM tickets t
-                JOIN order_items oi ON oi.id = t.order_item_id
-                JOIN ticket_types tt ON tt.id = oi.ticket_type_id
-                WHERE oi.order_id = ?
-                ORDER BY t.id ASC
-            ");
-            $ticket_stmt->execute([$order_id]);
-            $issued_tickets = $ticket_stmt->fetchAll();
+            // Trigger the actual phone prompt.
+            $stk_response = mpesa_stk_push(
+                $phone,
+                $grand_total,
+                'ORDER' . $order_id,
+                'Tickets for ' . $event['title']
+            );
 
-            send_ticket_confirmation([
-                'buyer_email'          => $email,
-                'buyer_name'           => $name,
-                'event_title'          => $event['title'],
-                'event_date_formatted' => format_event_date($event['event_date']) . ' · Doors ' . format_event_time($event['event_date']),
-                'venue'                => $event['venue'],
-                'total_formatted'      => format_currency($grand_total),
-            ], $line_items, $issued_tickets);
-            // Note: send_ticket_confirmation() never throws — if it fails,
-            // the order is still saved and the buyer still sees their
-            // tickets on confirmation.php, they just won't have the email.
+            if (isset($stk_response['CheckoutRequestID'])) {
+                $update = $pdo->prepare("UPDATE orders SET mpesa_checkout_request_id = ? WHERE id = ?");
+                $update->execute([$stk_response['CheckoutRequestID'], $order_id]);
 
-            unset($_SESSION['cart']);
-            header('Location: confirmation.php?order_id=' . $order_id);
-            exit;
+                unset($_SESSION['cart']);
+                header('Location: payment-status.php?order_id=' . $order_id);
+                exit;
+            } else {
+                // STK push itself failed to even send (bad credentials, network, etc).
+                // Mark the order failed and release the reserved stock.
+                $pdo->prepare("UPDATE orders SET status = 'failed' WHERE id = ?")->execute([$order_id]);
+                foreach ($line_items as $item) {
+                    $pdo->prepare("UPDATE ticket_types SET quantity_sold = quantity_sold - ? WHERE id = ?")
+                        ->execute([$item['qty'], $item['tier']['id']]);
+                }
+                $errors[] = 'Could not start the M-Pesa payment: ' . ($stk_response['error'] ?? ($stk_response['errorMessage'] ?? 'unknown error'));
+            }
 
         } catch (Exception $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             $errors[] = 'Checkout failed: ' . $e->getMessage();
         }
     }
@@ -157,7 +153,7 @@ require __DIR__ . '/includes/header.php';
                 <input type="email" name="email" value="<?= e($_POST['email'] ?? '') ?>" placeholder="amara@email.com">
             </div>
             <div class="field-group">
-                <label>Phone</label>
+                <label>M-Pesa phone number</label>
                 <input type="text" name="phone" value="<?= e($_POST['phone'] ?? '') ?>" placeholder="07XX XXX XXX">
             </div>
         </div>
@@ -194,7 +190,7 @@ require __DIR__ . '/includes/header.php';
 
         <div class="summary-bar">
             <div class="total">Total<span class="mono"><?= format_currency($grand_total) ?></span></div>
-            <button type="submit" class="btn-primary">Confirm & pay</button>
+            <button type="submit" class="btn-primary">Pay with M-Pesa</button>
         </div>
     </form>
 </div>
